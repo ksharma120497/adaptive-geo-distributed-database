@@ -146,3 +146,19 @@ func hashKey(key string) uint32 {
 	return (uint32(sum[0]) << 24) | (uint32(sum[1]) << 16) |
 		(uint32(sum[2]) << 8) | uint32(sum[3])
 }
+
+// AllNodes returns the list of all distinct physical node IDs in the ring.
+func (r *Ring) AllNodes() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	seen := make(map[string]struct{}, len(r.nodes))
+	for _, node := range r.nodes {
+		seen[node] = struct{}{}
+	}
+	result := make([]string, 0, len(seen))
+	for node := range seen {
+		result = append(result, node)
+	}
+	return result
+}

@@ -3,6 +3,7 @@ package metadata
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -51,4 +52,16 @@ func (c *Client) WatchReplicas(updateFn func(key string, value []byte)) {
 			}
 		}
 	}()
+}
+
+// SetReplicas writes the replica list for a specific key into etcd.
+func (c *Client) SetReplicas(key string, replicas []string) error {
+	buf, err := json.Marshal(replicas)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err = c.etcd.Put(ctx, "/replicas/"+key, string(buf))
+	return err
 }
