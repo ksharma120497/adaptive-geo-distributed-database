@@ -1,0 +1,44 @@
+version: "3.9"
+services:
+  etcd:
+    image: gcr.io/etcd-development/etcd:v3.5.9
+    command:
+      - etcd
+      - --data-dir=/etcd-data
+      - --listen-client-urls=http://0.0.0.0:2379
+      - --advertise-client-urls=http://etcd:2379
+    volumes:
+      - etcd-data:/etcd-data
+    networks:
+      - kvnet
+
+  server1:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: kv-server1
+    volumes:
+      - server1-data:/data
+    networks:
+      - kvnet
+
+  proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
+    container_name: kv-proxy
+    depends_on:
+      - etcd
+      - server1
+    ports:
+      - "8080:8080"
+    networks:
+      - kvnet
+
+volumes:
+  etcd-data:
+  server1-data:
+
+networks:
+  kvnet:
+    driver: bridge
